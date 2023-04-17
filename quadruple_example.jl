@@ -1,6 +1,6 @@
 using LinearAlgebra
 using DynamicPolynomials, Plots
-using HDF5, JLD, NumericalIntegration
+using NumericalIntegration
 
 
 include("./get_system_matrix.jl")
