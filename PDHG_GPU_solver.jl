@@ -123,8 +123,9 @@ u_large_tmp = cu(deepcopy(u_large))
     CUBLAS.symv!('U', 1., IminusβFF, u, -β, tmp)
     u = reshape(tmp, d+1, 2(m+n)*N)
 end
-
-xt,ut=interpret_solution(X[:,:,1:Nineq*N],X[:,:,Nineq*N+1:end])
+Xf=X[:,:,1:Nineq*N]
+Xg=X[:,:,Nineq*N+1:end]
+xt,ut=interpret_solution(Xf,Xg)
 
 return xt,ut,Xf,Xg,u
 end

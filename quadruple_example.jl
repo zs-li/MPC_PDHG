@@ -67,14 +67,14 @@ function shift_warm_start(Xf_in,Xg_in,u_in)
     Xf_in=Array{Float32,4}(reshape(Xf_in, d2, d2, 2(m+n), N))
     Xg_in=Array{Float32,4}(reshape(Xg_in, d2, d2, 2(m+n), N))
     u_in=Array{Float32,3}(reshape(u_in, d+1, 2(m+n), N))
-    for l in 2:N
-        Xf_in[:,:,:,l]=Xf_in[:,:,:,l-1]
-        Xg_in[:,:,:,l]=Xg_in[:,:,:,l-1]
-        u_in[:,:,l]=u_in[:,:,l-1]
+    for l in 1:N-1
+        Xf_in[:,:,:,l]=Xf_in[:,:,:,l+1]
+        Xg_in[:,:,:,l]=Xg_in[:,:,:,l+1]
+        u_in[:,:,l]=u_in[:,:,l+1]
     end
-    Xf_in[:,:,:,1]=rand(d2, d2, 2(m+n)).-0.5
-    Xg_in[:,:,:,1]=rand(d2, d2, 2(m+n)).-0.5
-    u_in[:,:,1]=rand(d+1, 2(m+n)).-0.5
+    Xf_in[:,:,:,N]=rand(d2, d2, 2(m+n)).-0.5
+    Xg_in[:,:,:,N]=rand(d2, d2, 2(m+n)).-0.5
+    u_in[:,:,N]=rand(d+1, 2(m+n)).-0.5
     Xf_in=Array{Float32,3}(reshape(Xf_in, d2, d2, 2(m+n)*N))
     Xg_in=Array{Float32,3}(reshape(Xg_in, d2, d2, 2(m+n)*N))
     u_in=Array{Float32,2}(reshape(u_in, d+1, 2(m+n)*N))
@@ -114,7 +114,7 @@ while true
 
         last_Xf, last_Xg, last_dual =shift_warm_start(last_Xf, last_Xg, last_dual)
 
-        xt_coef[:,:,:,k],ut_coef[:,:,:,k],last_Xf,last_Xg,last_dual=PDHG_solver(N,d,m,n,p_step_size,d_step_size,FF,μμ,F,G, 500,true,last_Xf,last_Xg,last_dual)
+        xt_coef[:,:,:,k],ut_coef[:,:,:,k],last_Xf,last_Xg,last_dual=PDHG_solver(N,d,m,n,p_step_size,d_step_size,FF,μμ,F,G, 200,true,last_Xf,last_Xg,last_dual)
     end
 
 
