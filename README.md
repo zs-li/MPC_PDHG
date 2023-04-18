@@ -10,16 +10,23 @@ Our proposed methods provides fast computation with continuous-time constraint s
 
 The project is written in [julia](https://julialang.org/).
 
-The main test script is **quadruple_example.jl**.
+The main test script is **quadruple_example.jl**. Please run this script for numerical simulation.
 
 ## package requirements
 
-The package we use are:
+The package we use for code test are:
 
-DynamicPolynomials v0.4.6
+```
 NumericalIntegration v0.3.3
-
 TensorOperations v3.2.4
 CUDA v3.13.1
+```
 
-For compatibility constraints, TensorOperations requires that CUDA version \< v4.1.4.
+Auxiliary code for visualization are:
+
+```
+DynamicPolynomials v0.4.6
+Plots v1.38.8
+```
+
+For compatibility constraints, ```TensorOperations``` requires that ```CUDA``` version \< v4.1.4.
