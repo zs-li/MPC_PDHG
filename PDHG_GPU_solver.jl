@@ -41,18 +41,18 @@ function interpret_solution(Xf,Xg)
     for l in 1:N
         for i in 1:d+1 
             seg=(l-1)*2(m+n)*(d+1)
-        for j in 1:2(m+n)
-            our_y[seg+(j-1)*(d+1)+i]=tr(F[:,:,i]*Xf[:,:,j,l])+tr(G[:,:,i]*Xg[:,:,j,l])
+            for j in 1:2(m+n)
+                our_y[seg+(j-1)*(d+1)+i]=tr(F[:,:,i]*Xf[:,:,j,l])+tr(G[:,:,i]*Xg[:,:,j,l])
+            end
+            for j in 1:n
+                xt[j,i,l]=((our_y-g)[seg+(j-1)*(d+1)+i]-(our_y-g)[seg+(j+n-1)*(d+1)+i])/2 #/2 to get average
+                # xt_col[(l-1)*n*(d+1)+(j-1)*(d+1)+i]=xt[j,i,l]
+            end
+            for j in 1:m
+                ut[j,i,l]=((our_y-g)[seg+(j+2n-1)*(d+1)+i]-(our_y-g)[seg+(j+2n+m-1)*(d+1)+i])/2 #/2 to get average
+                # ut_col[(l-1)*m*(d+1)+(j-1)*(d+1)+i]=ut[j,i,l]
+            end        
         end
-        for j in 1:n
-            xt[j,i,l]=((our_y-g)[seg+(j-1)*(d+1)+i]-(our_y-g)[seg+(j+n-1)*(d+1)+i])/2 #求平均数
-            # xt_col[(l-1)*n*(d+1)+(j-1)*(d+1)+i]=xt[j,i,l]
-        end
-        for j in 1:m
-            ut[j,i,l]=((our_y-g)[seg+(j+2n-1)*(d+1)+i]-(our_y-g)[seg+(j+2n+m-1)*(d+1)+i])/2 #求平均数
-            # ut_col[(l-1)*m*(d+1)+(j-1)*(d+1)+i]=ut[j,i,l]
-        end        
-    end
     end
     # obj=(xt_col-xref_col)'*Px*(xt_col-xref_col)+ut_col'*Pu*ut_col
     # innerp=u'*(our_y)
