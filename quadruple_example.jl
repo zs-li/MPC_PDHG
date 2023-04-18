@@ -1,6 +1,5 @@
-using LinearAlgebra
+using LinearAlgebra, NumericalIntegration
 using DynamicPolynomials, Plots
-using NumericalIntegration
 
 
 include("./get_system_matrix.jl")
@@ -53,40 +52,43 @@ function apply_poly_u(ut_coef_in,xk,apply_T)
     x_test=zeros(n,apply_steps+1)
     x_test[:,1]=xk
     for k in 1:apply_steps
-        basis0_001=zeros(d+1)
+        basis=zeros(d+1)
         for i in 1:d+1
-            basis0_001[d+2-i]=(k*Δt)^(i)/(i)-((k-1)*Δt)^(i)/(i)
+            basis[d+2-i]=(k*Δt)^(i)/(i)-((k-1)*Δt)^(i)/(i)
         end
-        delta_Bu=Bc*ut_coef_in*basis0_001
+        delta_Bu=Bc*ut_coef_in*basis
         x_test[:,k+1]=Ad*x_test[:,k]+delta_Bu
     end
     return x_test[:,end]
 end
 
 
-function shift_warm_start(Xf_in,Xg_in)
+function shift_warm_start(Xf_in,Xg_in,u_in)
     Xf_in=Array{Float32,4}(reshape(Xf_in, d2, d2, 2(m+n), N))
     Xg_in=Array{Float32,4}(reshape(Xg_in, d2, d2, 2(m+n), N))
+    u_in=Array{Float32,3}(reshape(u_in, d+1, 2(m+n), N))
     for l in 2:N
         Xf_in[:,:,:,l]=Xf_in[:,:,:,l-1]
         Xg_in[:,:,:,l]=Xg_in[:,:,:,l-1]
+        u_in[:,:,l]=u_in[:,:,l-1]
     end
-    return Xf_in,Xg_in
+    Xf_in[:,:,:,1]=rand(d2, d2, 2(m+n)).-0.5
+    Xg_in[:,:,:,1]=rand(d2, d2, 2(m+n)).-0.5
+    u_in[:,:,1]=rand(d+1, 2(m+n)).-0.5
+    Xf_in=Array{Float32,3}(reshape(Xf_in, d2, d2, 2(m+n)*N))
+    Xg_in=Array{Float32,3}(reshape(Xg_in, d2, d2, 2(m+n)*N))
+    u_in=Array{Float32,2}(reshape(u_in, d+1, 2(m+n)*N))
+    return Xf_in,Xg_in,u_in
 end
 
 
 global k=1
-global last_u=[0, 0]
 
 
-max_k=10
+max_k=101
 x=zeros(n,max_k)
 ut_coef=zeros(m,d+1,N,max_k)
 xt_coef=zeros(n,d+1,N,max_k)
-
-global last_Xf=zeros(d2,d2,2*(m+n)*N)
-global last_Xg=zeros(d2,d2,2*(m+n)*N)
-global last_dual=zeros(2(m+n)*(d+1)*N)
 
 
 x[:,1]=x0   
@@ -95,7 +97,7 @@ apply_T=1
 F,G=calc_FG(T/N,d)
 
 while true
-    global k, last_u, last_Xf, last_Xg, last_dual, inv_left, FF, μμ, xrefs
+    global k, last_Xf, last_Xg, last_dual, inv_left, FF, μμ
 
     @show k
    
@@ -110,14 +112,12 @@ while true
         end
         μμ=inv_left[n*(d+1)*N+1: n*(d+1)*N+(d+1)*2(m+n)*N,1:size(q,1)]*(-2*q)+inv_left[n*(d+1)*N+1: n*(d+1)*N+(d+1)*2(m+n)*N, size(q,1)+2(m+n)*(d+1)*N+1:end]*[-g; r]
 
-        last_Xf, last_Xg=shift_warm_start(last_Xf, last_Xg)
+        last_Xf, last_Xg, last_dual =shift_warm_start(last_Xf, last_Xg, last_dual)
 
-        xt_coef[:,:,:,k],ut_coef[:,:,:,k],last_Xf,last_Xg,last_dual=PDHG_solver(N,d,m,n,p_step_size,d_step_size,FF,μμ,F,G, 1000,true,last_Xf,last_Xg,last_dual)
+        xt_coef[:,:,:,k],ut_coef[:,:,:,k],last_Xf,last_Xg,last_dual=PDHG_solver(N,d,m,n,p_step_size,d_step_size,FF,μμ,F,G, 500,true,last_Xf,last_Xg,last_dual)
     end
 
-    
-    
-    last_u=[sum(ut_coef[1,:,1,k]), sum(ut_coef[2,:,1,k])]
+
     x[:,k+1]=apply_poly_u(ut_coef[:,:,1,k],x[:,k],apply_T)
     k+=1
     if k>=max_k

@@ -37,54 +37,27 @@ function interpret_solution(Xf,Xg)
 
     Xf = Array{Float32,4}(reshape(Xf, d2, d2, 2(m+n), N))
     Xg = Array{Float32,4}(reshape(Xg, d2, d2, 2(m+n), N))
-    # F = Array{Float32,2}(F)
-    # G = Array{Float32,2}(G)
+
     for l in 1:N
         for i in 1:d+1 
-        seg=(l-1)*2(m+n)*(d+1)
-        our_y[seg+0*(d+1)+i]=tr(F[:,:,i]*Xf[:,:,1,l])+tr(G[:,:,i]*Xg[:,:,1,l])
-        our_y[seg+1*(d+1)+i]=tr(F[:,:,i]*Xf[:,:,2,l])+tr(G[:,:,i]*Xg[:,:,2,l])
-        our_y[seg+2*(d+1)+i]=tr(F[:,:,i]*Xf[:,:,3,l])+tr(G[:,:,i]*Xg[:,:,3,l])
-        our_y[seg+3*(d+1)+i]=tr(F[:,:,i]*Xf[:,:,4,l])+tr(G[:,:,i]*Xg[:,:,4,l])
-        our_y[seg+4*(d+1)+i]=tr(F[:,:,i]*Xf[:,:,5,l])+tr(G[:,:,i]*Xg[:,:,5,l])
-        our_y[seg+5*(d+1)+i]=tr(F[:,:,i]*Xf[:,:,6,l])+tr(G[:,:,i]*Xg[:,:,6,l])
-        our_y[seg+6*(d+1)+i]=tr(F[:,:,i]*Xf[:,:,7,l])+tr(G[:,:,i]*Xg[:,:,7,l])
-        our_y[seg+7*(d+1)+i]=tr(F[:,:,i]*Xf[:,:,8,l])+tr(G[:,:,i]*Xg[:,:,8,l])
-        our_y[seg+8*(d+1)+i]=tr(F[:,:,i]*Xf[:,:,9,l])+tr(G[:,:,i]*Xg[:,:,9,l])
-        our_y[seg+9*(d+1)+i]=tr(F[:,:,i]*Xf[:,:,10,l])+tr(G[:,:,i]*Xg[:,:,10,l])
-        our_y[seg+10*(d+1)+i]=tr(F[:,:,i]*Xf[:,:,11,l])+tr(G[:,:,i]*Xg[:,:,11,l])
-        our_y[seg+11*(d+1)+i]=tr(F[:,:,i]*Xf[:,:,12,l])+tr(G[:,:,i]*Xg[:,:,12,l])
-
-        ## 
-        xt[1,i,l]+=(our_y-g)[seg+0*(d+1)+i]/2 #求平均数
-        xt[2,i,l]+=(our_y-g)[seg+1*(d+1)+i]/2
-        xt[3,i,l]+=(our_y-g)[seg+2*(d+1)+i]/2
-        xt[4,i,l]+=(our_y-g)[seg+3*(d+1)+i]/2
-        xt[1,i,l]-=(our_y-g)[seg+4*(d+1)+i]/2 #求平均数
-        xt[2,i,l]-=(our_y-g)[seg+5*(d+1)+i]/2
-        xt[3,i,l]-=(our_y-g)[seg+6*(d+1)+i]/2
-        xt[4,i,l]-=(our_y-g)[seg+7*(d+1)+i]/2
-        ut[1,i,l]+=(our_y-g)[seg+8*(d+1)+i]/2 #求平均数
-        ut[2,i,l]+=(our_y-g)[seg+9*(d+1)+i]/2
-        ut[1,i,l]-=(our_y-g)[seg+10*(d+1)+i]/2
-        ut[2,i,l]-=(our_y-g)[seg+11*(d+1)+i]/2 
-
-        # xt_col[(l-1)*n*(d+1)+0*(d+1)+i]=xt[1,i,l]
-        # xt_col[(l-1)*n*(d+1)+1*(d+1)+i]=xt[2,i,l]
-        # xt_col[(l-1)*n*(d+1)+2*(d+1)+i]=xt[3,i,l]
-        # xt_col[(l-1)*n*(d+1)+3*(d+1)+i]=xt[4,i,l]
-
-        # ut_col[(l-1)*m*(d+1)+0*(d+1)+i]=ut[1,i,l]
-        # ut_col[(l-1)*m*(d+1)+1*(d+1)+i]=ut[2,i,l] 
-
-        
+            seg=(l-1)*2(m+n)*(d+1)
+        for j in 1:2(m+n)
+            our_y[seg+(j-1)*(d+1)+i]=tr(F[:,:,i]*Xf[:,:,j,l])+tr(G[:,:,i]*Xg[:,:,j,l])
+        end
+        for j in 1:n
+            xt[j,i,l]=((our_y-g)[seg+(j-1)*(d+1)+i]-(our_y-g)[seg+(j+n-1)*(d+1)+i])/2 #求平均数
+            # xt_col[(l-1)*n*(d+1)+(j-1)*(d+1)+i]=xt[j,i,l]
+        end
+        for j in 1:m
+            ut[j,i,l]=((our_y-g)[seg+(j+2n-1)*(d+1)+i]-(our_y-g)[seg+(j+2n+m-1)*(d+1)+i])/2 #求平均数
+            # ut_col[(l-1)*m*(d+1)+(j-1)*(d+1)+i]=ut[j,i,l]
+        end        
     end
     end
     # obj=(xt_col-xref_col)'*Px*(xt_col-xref_col)+ut_col'*Pu*ut_col
     # innerp=u'*(our_y)
 
     return xt,ut#,obj,innerp
-
 
 end
 
@@ -100,17 +73,16 @@ d2=Int((d-1)/2+1)
 
 if if_warm_start 
     # primal variables, 
-    Xf=cu(last_Xf)
-    Xg=cu(last_Xg)
+    Xf=last_Xf
+    Xg=last_Xg
     # # dual variables 
-    u=Array{Float32,2}(last_u)
-
+    u=last_u
 else
     # primal variables, 
-    Xf=cu(rand(d2,d2,2(m+n)*N).-0.5)
-    Xg=cu(rand(d2,d2,2(m+n)*N).-0.5)
+    Xf=rand(d2,d2,2(m+n)*N).-0.5
+    Xg=rand(d2,d2,2(m+n)*N).-0.5
     # # dual variables 
-    u=(zeros(d+1,2(n+m)*N).-0.5)
+    u=zeros(d+1,2(n+m)*N).-0.5
 end
 
 
@@ -118,15 +90,12 @@ FF = cu(FF)
 μμ = cu(μμ)
 β = cu(β)
 α = cu(α)
+IminusβFF = CuArray{Float32}(I_FF-FF*β)
+FG = cu(cat(F, G, dims=3))
 
-Xf=rand(d2,d2,Nineq*N).-0.5 #Xf_list[:,:,:,:,1]
-Xg=rand(d2,d2,Nineq*N).-0.5 #Xg_list[:,:,:,:,1]
+X = cu(cat(Xf, Xg, dims=3))
 dX = cu(zeros(d2,d2,2Nineq*N))
 
-
-IminusβFF = CuArray{Float32}(I_FF-FF*β)
-X = cu(cat(Xf, Xg, dims=3))
-FG = cu(cat(F, G, dims=3))
 u_large = zeros(2(d+1), 4(m+n) * N)
 u_large[1:d+1, 1:2(m+n) * N] = u
 u_large[d+2:end, 2(m+n) * N + 1:end] = u
@@ -155,7 +124,7 @@ u_large_tmp = cu(deepcopy(u_large))
     u = reshape(tmp, d+1, 2(m+n)*N)
 end
 
-xt,ut=interpret_solution(Xf,Xg)
+xt,ut=interpret_solution(X[:,:,1:Nineq*N],X[:,:,Nineq*N+1:end])
 
 return xt,ut,Xf,Xg,u
 end
