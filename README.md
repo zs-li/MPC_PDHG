@@ -12,6 +12,16 @@ The project is written in [julia](https://julialang.org/).
 
 The main test script is **quadruple_example.jl**. Please run this script for numerical simulation.
 
+## Result
+
+![Visualiztion of the optimziation process](https://github.com/zs-li/MPC_PDHG/blob/main/anim.gif)
+
+This figure shows the optimization intermediate states of our proposed algorithm. As optimization goes on, the polynomials representing the state trajectories are converging to the actual trajectories governed by system dynamics and subject to constraints. 
+
+"k" in the title is the number of apply steps, also the index of sequential SDP problems we solve.
+
+The shift warm start strategy can speed up the optimization process by setting the initial values in the overlapped horizon as in the last step. Only the final segment (**new** horizon) is needed to be calculated.
+
 ## package requirements
 
 The package we use for code test are:
