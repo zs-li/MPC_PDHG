@@ -20,7 +20,7 @@ This figure shows the optimization intermediate states of our proposed algorithm
 
 "k" in the title is the number of apply steps, also the index of sequential SDP problems we solve.
 
-The shift warm start strategy can speed up the optimization process by setting the initial values in the overlapped horizon as in the last step. Only the final segment (**new** horizon) is needed to be calculated.
+The shift warm start strategy can speed up the optimization process by setting the initial values in the overlapped horizon as in the previous step. Only the final segment (**new** horizon) is needed to be calculated from a random intial value.
 
 ## package requirements
 
